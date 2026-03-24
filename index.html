@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Binary Hex Game</title>
+
+    <!-- Bootstrap CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div style="margin-top: 5rem !important;"></div>
+
+    <!-- Title Section -->
+    <section class="container">
+        <div class="d-flex justify-content-center align-items-center flex-column">
+            <h1 class="fw-bold">The Binary Hex Game</h1>
+            <p class="mb-1">© 2026 Ilman Zidni</p>
+            <p style="font-size: small;">Licensed under the GNU General Public License v3.0. <a href="https://github.com/ilman01/The-Binary-Hex-Game" target="_blank" rel="noopener noreferrer">Github</a></p>
+        </div>
+    </section>
+
+    <div style="margin-top: 2rem !important;"></div>
+
+    <!-- Main Game Section -->
+    <section class="flex-grow-1 d-flex justify-content-center align-items-center">
+        <div class="card shadow col-md-5">
+            <div class="card-body p-4">
+
+                <!-- Question -->
+                <h5 id="question-title" class="card-title mb-3 fw-bold">Question: Convert to Hex</h5>
+                <p id="question-main" class="card-text">1010</p>
+                <p id="question-feedback" class="card-text" style="font-size: small; color: red;">-</p>
+
+                <!-- Answer -->
+                <input id="answer-box" type="text" class="form-control mb-3" placeholder="Answer here...">
+
+                <!-- Submit -->
+                <button id="submit-button" class="btn btn-success w-100">Submit</button>
+
+                <!-- Cheat Sheet -->
+                <button id="cheat-button" class="btn btn-secondary w-20 mt-2" data-bs-toggle="modal" data-bs-target="#cheatModal">Cheat Sheet</button>
+
+            </div>
+        </div>
+    </section>
+
+    <div style="margin-top: 2rem !important;"></div>
+
+    <!-- Settings Section -->
+    <section class="container">
+
+        <div class="d-flex justify-content-center align-items-center flex-column gap-3">
+
+            <div class="d-flex flex-wrap gap-3 justify-content-center">
+
+                <!-- Mode Buttons -->
+                <button id="bin-to-hex-button" class="btn btn-outline-primary">
+                    Binary → Hex Mode
+                </button>
+
+                <button id="hex-to-bin-button" class="btn btn-outline-secondary">
+                    Hex → Binary Mode
+                </button>
+
+            </div>
+
+            <!-- Multi Mode Toggle -->
+            <div class="form-check form-switch ms-3">
+                <input id="multi-mode-switch" class="form-check-input" type="checkbox" id="multiMode">
+                <label class="form-check-label" for="multiMode">
+                    Multi Mode
+                </label>
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- Cheat Sheet Modal -->
+    <div class="modal fade" id="cheatModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Binary ↔ Hex Cheat Sheet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <pre class="mb-0">
+0000 = 0
+0001 = 1
+0010 = 2
+0011 = 3
+0100 = 4
+0101 = 5
+0110 = 6
+0111 = 7
+1000 = 8
+1001 = 9
+1010 = A
+1011 = B
+1100 = C
+1101 = D
+1110 = E
+1111 = F
+                </pre>
+            </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Elements
+        const questionTitle = document.getElementById("question-title");
+        const questionMain = document.getElementById("question-main");
+        const questionFeedback = document.getElementById("question-feedback");
+        const answerBox = document.getElementById("answer-box");
+        const submitButton = document.getElementById("submit-button");
+
+        const binToHexBtn = document.getElementById("bin-to-hex-button");
+        const hexToBinBtn = document.getElementById("hex-to-bin-button");
+        const multiModeSwitch = document.getElementById("multi-mode-switch");
+
+        let mode = "bin-to-hex";
+
+        // Generate random binary
+        function generateBinary(length) {
+            let result = "";
+            for (let i = 0; i < length; i++) {
+                result += Math.random() > 0.5 ? "1" : "0";
+            }
+            return result;
+        }
+
+        // Generate random hex
+        function generateHex(length) {
+            const hexChars = "0123456789ABCDEF";
+            let result = "";
+            for (let i = 0; i < length; i++) {
+                result += hexChars[Math.floor(Math.random() * 16)];
+            }
+            return result;
+        }
+
+        // Generate question
+        function generateQuestion() {
+            let isMulti = multiModeSwitch.checked;
+
+            if (mode === "bin-to-hex") {
+                questionTitle.textContent = "Question: Convert to Hex";
+                let length = isMulti ? 16 : 4;
+                let binRaw = generateBinary(length);
+
+                // Add spacing every 4 bits ONLY for display
+                let binDisplay = isMulti ? binRaw.match(/.{1,4}/g).join(" ") : binRaw;
+
+                questionMain.textContent = binDisplay;
+                questionMain.dataset.answer = parseInt(binRaw, 2).toString(16).toUpperCase();
+            } else {
+                questionTitle.textContent = "Question: Convert to Binary";
+
+                let length = isMulti ? 4 : 1;
+                let hex = generateHex(length);
+
+                questionMain.textContent = hex;
+                questionMain.dataset.answer = parseInt(hex, 16).toString(2);
+            }
+
+            answerBox.value = "";
+        }
+
+        // Submit answer
+        submitButton.addEventListener("click", () => {
+            let userAnswer = answerBox.value.replace(/\s+/g, "").toUpperCase();
+            let correctAnswer = questionMain.dataset.answer.replace(/\s+/g, "").toUpperCase();
+
+            // ignore leading zeros
+            userAnswer = userAnswer.replace(/^0+/, "");
+            correctAnswer = correctAnswer.replace(/^0+/, "");
+
+            if (userAnswer === correctAnswer) {
+                questionFeedback.style.color = "green";
+                questionFeedback.textContent = "Correct!";
+                generateQuestion();
+            } else {
+                questionFeedback.style.color = "red";
+                questionFeedback.textContent = "Wrong. Correct answer was: " + correctAnswer;
+                generateQuestion();
+            }
+        });
+
+        // Mode switching
+        binToHexBtn.addEventListener("click", () => {
+            mode = "bin-to-hex";
+            binToHexBtn.className = "btn btn-outline-primary";
+            hexToBinBtn.className = "btn btn-outline-secondary";
+            questionFeedback.textContent = "";
+            generateQuestion();
+        });
+
+        hexToBinBtn.addEventListener("click", () => {
+            mode = "hex-to-bin";
+            binToHexBtn.className = "btn btn-outline-secondary";
+            hexToBinBtn.className = "btn btn-outline-primary";
+            questionFeedback.textContent = "";
+            generateQuestion();
+        });
+
+        // Multi mode toggle
+        multiModeSwitch.addEventListener("change", () => {
+            questionFeedback.textContent = "";
+            generateQuestion();
+        });
+
+        // Enter key support
+        answerBox.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                submitButton.click();
+            }
+        });
+
+        // Init
+        generateQuestion();
+        questionFeedback.textContent = "";
+    </script>
+     
+
+</body>
+</html>
