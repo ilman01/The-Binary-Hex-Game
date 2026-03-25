@@ -9,23 +9,33 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <div style="margin-top: 5rem !important;"></div>
+    <div style="margin-top: 4rem !important;"></div>
 
     <!-- Title Section -->
     <section class="container">
         <div class="d-flex justify-content-center align-items-center flex-column">
             <h1 class="fw-bold">The Binary Hex Game</h1>
             <p class="mb-1">© 2026 Ilman Zidni</p>
-            <p style="font-size: small;">Licensed under the GNU General Public License v3.0. <a href="https://github.com/ilman01/The-Binary-Hex-Game" target="_blank" rel="noopener noreferrer">Github</a></p>
+            <p class="mb-0" style="font-size: small;">Licensed under the GNU General Public License v3.0. <a href="https://github.com/ilman01/The-Binary-Hex-Game" target="_blank" rel="noopener noreferrer">Github</a></p>
         </div>
     </section>
 
     <div style="margin-top: 2rem !important;"></div>
 
+    <!-- Score Section -->
+    <section class="d-flex justify-content-center align-items-center gap-4">
+        <p class="mb-0" id="high-score-text">High Score: 0</p>
+    </section>
+
+    <div style="margin-top: 1rem !important;"></div>
+
     <!-- Main Game Section -->
     <section class="flex-grow-1 d-flex justify-content-center align-items-center">
         <div class="card shadow col-md-5">
             <div class="card-body p-4">
+
+                <!-- Score -->
+                <p class="mb-0" style="font-size: small;" id="score-text">Score: 0</p>
 
                 <!-- Question -->
                 <h5 id="question-title" class="card-title mb-3 fw-bold">Question: Convert to Hex</h5>
@@ -121,12 +131,16 @@
         const questionFeedback = document.getElementById("question-feedback");
         const answerBox = document.getElementById("answer-box");
         const submitButton = document.getElementById("submit-button");
+        const highScoreText = document.getElementById("high-score-text");
+        const scoreText = document.getElementById("score-text")
 
         const binToHexBtn = document.getElementById("bin-to-hex-button");
         const hexToBinBtn = document.getElementById("hex-to-bin-button");
         const multiModeSwitch = document.getElementById("multi-mode-switch");
 
         let mode = "bin-to-hex";
+
+        let score = 0;
 
         // Generate random binary
         function generateBinary(length) {
@@ -174,8 +188,15 @@
             answerBox.value = "";
         }
 
+        function resetScore() {
+            highScoreText.style.fontWeight = 'normal';
+            score = 0;
+            scoreText.textContent = "Score: " + score;
+        }
+
         // Submit answer
         submitButton.addEventListener("click", () => {
+            let isMulti = multiModeSwitch.checked;
             let userAnswer = answerBox.value.replace(/\s+/g, "").toUpperCase();
             let correctAnswer = questionMain.dataset.answer.replace(/\s+/g, "").toUpperCase();
 
@@ -186,10 +207,28 @@
             if (userAnswer === correctAnswer) {
                 questionFeedback.style.color = "green";
                 questionFeedback.textContent = "Correct!";
+                flashColor(scoreText, "limegreen", 1)
+                if (isMulti) {
+                    score += 4
+                } else {
+                    score++;
+                }
+                scoreText.textContent = "Score: " + score
+                if (score > getCookie("high-score")) {
+                    setCookie("high-score", score);
+                    highScoreText.style.fontWeight = 'bold';
+                    flashColor(highScoreText, "limegreen", 1);
+                    highScoreText.textContent = "High Score: " + getCookie("high-score");
+                }
                 generateQuestion();
             } else {
                 questionFeedback.style.color = "red";
                 questionFeedback.textContent = "Wrong. Correct answer was: " + correctAnswer;
+                flashColor(scoreText, "red", 1)
+                if (score == getCookie("high-score")) {
+                    flashColor(highScoreText, "red", 5)
+                }
+                resetScore();
                 generateQuestion();
             }
         });
@@ -200,6 +239,7 @@
             binToHexBtn.className = "btn btn-outline-primary";
             hexToBinBtn.className = "btn btn-outline-secondary";
             questionFeedback.textContent = "";
+            resetScore();
             generateQuestion();
         });
 
@@ -208,12 +248,14 @@
             binToHexBtn.className = "btn btn-outline-secondary";
             hexToBinBtn.className = "btn btn-outline-primary";
             questionFeedback.textContent = "";
+            resetScore();
             generateQuestion();
         });
 
         // Multi mode toggle
         multiModeSwitch.addEventListener("change", () => {
             questionFeedback.textContent = "";
+            resetScore();
             generateQuestion();
         });
 
@@ -224,9 +266,53 @@
             }
         });
 
+        function flashColor(element, color, duration) {
+            const originalColor = getComputedStyle(element).color;
+
+            // Instantly set color (no transition)
+            element.style.transition = "none";
+            element.style.color = color;
+
+            // Force reflow so it applies immediately
+            void element.offsetWidth;
+
+            // Enable fade out
+            element.style.transition = "color "+ duration + "s ease";
+            element.style.color = originalColor;
+
+            // Cleanup after animation
+            setTimeout(() => {
+                element.style.transition = "";
+                element.style.color = "";
+            }, 200);
+        }
+
+        function setCookie(cookieName, value) {
+            const d = new Date();
+            d.setFullYear(d.getFullYear() + 2); // 2 years in the future
+            document.cookie = `${cookieName}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/`;
+        }
+
+        function getCookie(cookieName) {
+            const nameEQ = cookieName + "=";
+            const decodedCookies = decodeURIComponent(document.cookie);
+            const cookiesArray = decodedCookies.split("; ");
+            for (let cookie of cookiesArray) {
+                if (cookie.indexOf(nameEQ) === 0) {
+                    return cookie.substring(nameEQ.length);
+                }
+            }
+            return null;
+        }
+
         // Init
         generateQuestion();
         questionFeedback.textContent = "";
+        if (getCookie("high-score")) {
+            highScoreText.textContent = "High Score: " + getCookie("high-score");
+        } else {
+            setCookie("high-score", 0)
+        }
     </script>
      
 
